@@ -4,7 +4,3 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-outputs/
-*.joblib
-data/raw/
-reference_doc/
