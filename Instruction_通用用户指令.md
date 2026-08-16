@@ -103,13 +103,14 @@
 - 正式文档正文应可直接交付。真实引文、脚注、图表来源和参考文献按规范保留；“可追溯来源”“可核验来源”“待核验”“待确认”“待补充引用”等过程提示不得混入普通正文。尚未核实或需要确认的内容默认在对话中单独说明，并告知当前文档能否视为最终稿；确需保留在文档中时，应以加粗、颜色、批注或修订标记等醒目格式标出，并在回答中说明位置，避免含有未处理提示的文档被误作最终交付稿。
 - 本文件只规定通用的表达、组织、逻辑和事实严谨性要求；行业、项目、文种或单次任务的专门规则由相应指令规定。
 
-# Environment (Instructions for Agents)
+# 本地执行环境（面向 agent）
 
-- Operating system: Windows 11.
-- Use PowerShell 7 (`pwsh.exe`) for PowerShell commands.
-- Use UTF-8 for text files unless the project explicitly requires another encoding.
-- Prefer Python for complex, multi-step, or stateful scripting when appropriate.
-- Check the actual runtime environment before using Linux-specific shell commands.
+- 操作系统：Windows 11。
+- PowerShell 命令优先使用 PowerShell 7（`pwsh.exe`）。
+- 默认文本编码使用 UTF-8。
+- 简单系统操作和命令行任务使用 PowerShell 7。
+- 复杂、较长或包含较多字符串转义、JSON/正则处理的脚本任务，优先使用 Python。
+- 执行依赖特定 Shell 的命令前，先确认当前执行环境。
 
 # 本地项目文件默认访问权限（面向 agent）
 
