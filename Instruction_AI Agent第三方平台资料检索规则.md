@@ -1,5 +1,14 @@
 ## 第三方平台资料检索规则
 
+### 检索能力来源与使用方式
+
+以下名称表示可移植的能力类别，不代表每台设备均已安装。使用前从当前 Agent 的技能清单、MCP/工具目录和命令行帮助中确认可用能力，并读取对应技能的 SKILL.md 及其引用的说明文件；安装状态、集成配置、命令行程序和登录会话均按当前环境判断。
+
+- **TikHub：**以 tikhub-onboarding 为入口，按需配合 tikhub-endpoint-discovery 及其 tikhub-find-endpoint、references/openapi-index.json；端点以官方实时 OpenAPI 为准。已接入 TikHub MCP 时参照 tikhub-mcp 及当前 MCP 配置，否则按官方 API 文档调用 REST；API Key 通过当前环境的密钥配置使用。端点价格以 Marketplace 为准，所有调用均按付费服务计。
+- **OpenCLI / smart-search：**smart-search 是基于 OpenCLI 命令行的检索路由技能，应与 opencli-usage 配套，并按任务读取 smart-search 的相关 references/sources-*.md。通过 opencli list 和所选站点、命令的实时帮助发现适配器及参数；实际执行方式和浏览器/Bridge 要求以适配器当前策略为准。
+- **Socai：**通过 socai-social-research 技能使用当前环境的 socai 命令行工具；命令说明见其 references/commands.md，状态和参数以 socai status --json、socai <site> --help 及当前版本支持的平台为准。Socai 使用其管理的 Chrome 会话。
+- **Computer Use：**指当前运行环境提供的图形界面交互能力及其 computer-use 技能说明，适用于需要页面操作或视觉核验的只读场景；是否可用以当前 Agent 的能力清单为准。
+
 适用于小红书、知乎、微信公众号、Bilibili 和 YouTube 的公开内容检索。目标是在只读、低风险前提下发现有代表性的候选，并核实入选对象的正文、图片、评论和互动信息；视频网站还包括标题、简介、字幕/转写、缩略图等视频外信息。只有平台提供总量与分页/游标且已完整遍历时，才报告结果或评论全集覆盖。
 
 1. **访问范围与证据**
@@ -9,11 +18,11 @@
 
 2. **工具路由与成本**
    - 工具路由结合任务覆盖、字段需求、证据质量、效率和成本灵活选择。通常先用免费的 OpenCLI/smart-search、Socai 等支持路径；覆盖、字段或读取效果不足时再用付费 TikHub 补足，任务所需时即使费用较高也可调用。Computer Use 用于需要浏览器交互或页面核验的场景，按需采用。
-   - 按平台和目标字段选择具体端点；smart-search 等路由工具需结合实际下游与原始证据判断覆盖，避免重复调用。smart-search 是以 skill 形式安装。
+   - 按平台和目标字段选择具体端点；智能路由负责发现路径，覆盖情况以实际下游和原始证据为准，避免重复调用。
    - 批量任务或预计费用较高时，按 Marketplace 当前端点价格和计费粒度估算搜索分页、详情、评论/回复、互动统计、媒体接口及必要试调/重试的费用，并向用户说明预估；免费路径可满足的部分交由相应工具完成，通过缩小范围、按稳定 ID 去重和分阶段读取控制 TikHub 调用量。
    - 保存响应、request_id、查询条件和游标，便于复用及判断是否重试。TikHub 每次实时请求均独立计费，MCP 与 REST 共用计费；cache_url 仅用于查看同一响应。
    - 端点、参数或区域不明确时查 TikHub 实时 OpenAPI 文档；中国大陆按文档选择 `api.tikhub.dev`，使用 TikHub API Key。MCP 会话异常或请求超时后，先判断请求是否已执行，再决定是否切换 REST 或重试。
-   - OpenCLI 任务开始先运行 `opencli doctor`；需要时通过 `opencli profile list` 选择当前连接的 Bridge 实例。smart-search 负责路由，仍需核实下游原始证据。同一浏览器会话的导航串行执行；Socai、OpenCLI 和 Computer Use 会话相互独立。
+   - 仅在所选 OpenCLI 适配器使用浏览器桥接时运行 `opencli doctor`；需要切换当前连接的 Bridge 实例时使用 `opencli profile list`。同一浏览器会话的导航串行执行；Socai、OpenCLI 和 Computer Use 会话相互独立。
 
 3. **检索范围与候选覆盖**
    - 先用精确关键词，再依据实际结果补充同义词、别名、账号、内容类型或时间筛选；视频网站限定视频结果。记录关键词、排序、筛选、页码和游标。
@@ -21,7 +30,7 @@
    - 多平台任务维护简要台账，记录目标字段、尝试路径、候选总数、实际返回数、已详细读取数、分页/游标、状态和缺口。
 
 4. **平台读取路径**
-   - **小红书：**TikHub 可检索并读取去重后的入选笔记；大批量时优先用 OpenCLI 或 Socai 免费发现候选，TikHub 用于补足未覆盖的质量或字段。OpenCLI 的 `note` 读取正文和互动，`comments --with-replies` 读取评论及楼中楼，`download` 读取图片；Socai 用 `search` 发现候选，以带签名的 `get-notes` 批量读取正文、图片 OCR、评论和回复。Computer Use 用于补充页面核验；详情已有图片 URL 时优先直接核验原图。保留 note_id、xsec_token 和完整签名链接；搜索卡片遇到导航拒绝时，使用同一 ID 与原 token 打开规范的 `/explore/<note_id>?xsec_token=<token>&xsec_source=pc_search`。
+   - **小红书：**TikHub 可检索并读取去重后的入选笔记；大批量时优先用 OpenCLI 或 Socai 免费发现候选，Socai 略优先；TikHub 用于补足未覆盖的质量或字段。OpenCLI 的 `note` 读取正文和互动，`comments --with-replies` 读取评论及楼中楼，`download` 读取图片；Socai 用 `search` 发现候选，以带签名的 `get-notes` 批量读取正文、图片 OCR、评论和回复。Computer Use 用于补充页面核验；详情已有图片 URL 时优先直接核验原图。保留 note_id、xsec_token 和完整签名链接；搜索卡片遇到导航拒绝时，使用同一 ID 与原 token 打开规范的 `/explore/<note_id>?xsec_token=<token>&xsec_source=pc_search`。
    - **知乎：**TikHub 可发现问题、回答和文章，并通过 ID 结构化接口读取正文和评论；OpenCLI/smart-search 用于免费发现或补充读取，Computer Use 用于页面补充。OpenCLI 可用 `answer-detail`、`answer-comments` 读取；专栏读取原文全文及图片引用，页面导航失败时改走 ID/API。详情评论数为 0 且评论接口返回 `EMPTY_RESULT` 时，记为已核实零评论。
    - **微信公众号：**TikHub 可搜索和读取原文；smart-search/OpenCLI（含搜狗发现）用于免费发现或补充候选，Computer Use 用于页面补充核验。候选筛选为 `mp.weixin.qq.com/s/...` 原文，并核对账号、标题和发布时间。TikHub 搜索使用 POST `/api/v1/wechat_search/v2/fetch_search`，设置 `business_type=article`、`raw=false` 并保存游标；对入选文章优先 POST `/api/v1/wechat_mp/v2/fetch_article_detail_h5`（`raw=false`）读取正文和图片。`fetch_article_detail` 与 H5 是独立端点，每篇按文档推荐选择详情路径；互动统计、评论和回复另行计费，按需读取并计入预算。按端点文档设置超时；搜索返回 `no_more` 且无结果时记为空。传给 OpenCLI 前删除 `#rd` 等片段并保留有效参数。
    - **Bilibili、YouTube：**TikHub 可限定视频搜索，并按 BV 号或视频 ID 读取标题、频道/作者、时间、简介、互动、缩略图、平台字幕和评论；OpenCLI/smart-search 用于免费发现或补充读取，Computer Use 用于前两者无法满足的页面核验。字幕为空时先用已知有字幕的视频核对工具链，再视需要转写并标明来源。Bilibili 主评论入口上限为 50，按 rpid 读取楼中楼；YouTube 评论请求上限为 100。报告实际返回及读取数量。
