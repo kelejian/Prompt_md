@@ -3,16 +3,16 @@
 适用于小红书、知乎、微信公众号、Bilibili 和 YouTube 的公开内容检索。目标是在只读、低风险前提下发现有代表性的候选，并核实入选对象的正文、图片、评论和互动信息；视频网站还包括标题、简介、字幕/转写、缩略图等视频外信息。只有平台提供总量与分页/游标且已完整遍历时，才报告结果或评论全集覆盖。
 
 1. **访问范围与证据**
-   - 操作范围限于公开页面和只读接口，保持低频并按任务需要分页；平台互动、发布、购买和资料修改等写操作不纳入任务。图片和媒体按需临时读取，用户未要求保存时仅用于本次核验。
+   - 操作范围限于公开页面和只读接口，按任务需要分页；平台互动、发布、购买和资料修改等写操作不纳入任务。免费检索仅通过 OpenCLI/smart-search、Socai、Computer Use 等支持路径进行，禁止用自写脚本、裸请求或其他未支持方式直接抓取平台数据。图片和媒体按需临时读取，用户未要求保存时仅用于本次核验。
    - 搜索卡、标题、片段、AI 摘要和转述用于发现候选。引用证据时区分平台正文/简介、平台字幕、评论/互动字段、图片可见文字、OCR 转写和视觉判断。
    - 对每个入选对象记录稳定 ID、作者/账号、标题、日期、原始链接、目标字段读取情况及缺口；图片、字幕、评论分别记录可见总量与实际读取量。
 
 2. **工具路由与成本**
-   - 在安全、证据质量和任务覆盖符合要求的路径中，优先使用已确认免费的非 TikHub 方式。使用 OpenCLI/smart-search、Computer Use、Socai 等前先核实实际下游和免费额度。TikHub 始终按付费服务计，所有入口的调用均纳入付费预算，包括使用赠送余额的调用。免费路径无法满足任务时，再比较符合要求的付费方案费用。
-   - 默认优先路径：小红书 OpenCLI/Computer Use，Socai（核实免费额度；付费时比较费用），再考虑 TikHub；知乎 smart-search/OpenCLI → Computer Use → TikHub；微信公众号 smart-search/OpenCLI（搜狗发现）→ Computer Use（原文核实）→ TikHub；Bilibili、YouTube smart-search/OpenCLI → Computer Use → TikHub。确认路由器的实际下游后再判断费用和覆盖。
-   - 预计 TikHub 调用达到百次量级或单次费用可能超过 1 美元时，按大批量任务管理。调用前按官方 Marketplace 的当前端点价格和折扣估算搜索分页、详情、评论/回复、互动统计、媒体接口、试调和重试，并核实批量端点计费粒度。预计费用超过 1 美元时，先告知调用数、费用、免费路径的覆盖差异和预期范围，取得用户确认后再调用；低于该金额的付费调用也要先说明估价。累计预算，超出预算时暂停核算。
-   - 先缩小查询范围、按稳定 ID 去重，再读取入选对象；保存响应、request_id、查询条件和游标以便复用。TikHub 每次实时请求均独立计费，MCP 与 REST 共用计费；cache_url 只用于查看同一响应。提高 RPS 前先核实是否另收月费，一次性任务不自动升级。
-   - TikHub 使用前读取实时 `https://api.tikhub.io/openapi.json` 和端点价格；中国大陆按文档选择 `api.tikhub.dev`，认证使用 TikHub API Key。MCP 会话失效时先核对计费状态，再决定是否低频改走官方 REST。
+   - 工具路由结合任务覆盖、字段需求、证据质量、效率和成本灵活选择。通常先用免费的 OpenCLI/smart-search、Socai 等支持路径；覆盖、字段或读取效果不足时再用付费 TikHub 补足，任务所需时即使费用较高也可调用。Computer Use 用于需要浏览器交互或页面核验的场景，按需采用。
+   - 按平台和目标字段选择具体端点；smart-search 等路由工具需结合实际下游与原始证据判断覆盖，避免重复调用。
+   - 批量任务或预计费用较高时，按 Marketplace 当前端点价格和计费粒度估算搜索分页、详情、评论/回复、互动统计、媒体接口及必要试调/重试的费用，并向用户说明预估；免费路径可满足的部分交由相应工具完成，通过缩小范围、按稳定 ID 去重和分阶段读取控制 TikHub 调用量。
+   - 保存响应、request_id、查询条件和游标，便于复用及判断是否重试。TikHub 每次实时请求均独立计费，MCP 与 REST 共用计费；cache_url 仅用于查看同一响应。
+   - 端点、参数或区域不明确时查 TikHub 实时 OpenAPI 文档；中国大陆按文档选择 `api.tikhub.dev`，使用 TikHub API Key。MCP 会话异常或请求超时后，先判断请求是否已执行，再决定是否切换 REST 或重试。
    - OpenCLI 任务开始先运行 `opencli doctor`；需要时通过 `opencli profile list` 选择当前连接的 Bridge 实例。smart-search 负责路由，仍需核实下游原始证据。同一浏览器会话的导航串行执行；Socai、OpenCLI 和 Computer Use 会话相互独立。
 
 3. **检索范围与候选覆盖**
@@ -21,10 +21,10 @@
    - 多平台任务维护简要台账，记录目标字段、尝试路径、候选总数、实际返回数、已详细读取数、分页/游标、状态和缺口。
 
 4. **平台读取路径**
-   - **小红书：**保留 note_id、xsec_token 和完整签名链接。搜索卡片路径遇到导航拒绝时，使用同一 ID 与原 token 打开规范的 `/explore/<note_id>?xsec_token=<token>&xsec_source=pc_search`。OpenCLI 的 `note` 读取正文和互动，`comments --with-replies` 读取评论及楼中楼，`download` 读取图片；Socai 用 `search` 发现候选，以带签名的 `get-notes` 批量读取正文、图片 OCR、评论和回复。TikHub 只读取去重后的入选笔记；详情已有图片 URL 时优先直接核验原图。
-   - **知乎：**优先以 smart-search/OpenCLI 或 Computer Use 发现问题、回答和文章 ID，再用 ID 结构化接口或 OpenCLI `answer-detail`、`answer-comments` 读取正文和评论。专栏读取原文全文及图片引用；页面导航失败时改走 ID/API。详情评论数为 0 且评论接口返回 `EMPTY_RESULT` 时，记为已核实零评论。
-   - **微信公众号：**搜狗用于发现，候选筛选为 `mp.weixin.qq.com/s/...` 原文，并核对账号、标题和发布时间。使用 TikHub 时，POST `/api/v1/wechat_search/v2/fetch_search`，设置 `business_type=article`、`raw=false` 并保存游标；对入选文章优先 POST `/api/v1/wechat_mp/v2/fetch_article_detail_h5`（`raw=false`）读取正文和图片。`fetch_article_detail` 与 H5 是独立端点，每篇按文档推荐选择详情路径；互动统计、评论和回复另行计费，按需读取并计入预算。按端点文档设置超时；搜索返回 `no_more` 且无结果时记为空。传给 OpenCLI 前删除 `#rd` 等片段并保留有效参数。
-   - **Bilibili、YouTube：**限定视频搜索，按 BV 号或视频 ID 读取标题、频道/作者、时间、简介、互动、缩略图、平台字幕和评论。字幕为空时先用已知有字幕的视频核对工具链，再视需要转写并标明来源。Bilibili 主评论入口上限为 50，按 rpid 读取楼中楼；YouTube 评论请求上限为 100。报告实际返回及读取数量，按需用 TikHub 或页面补取。
+   - **小红书：**TikHub 可检索并读取去重后的入选笔记；大批量时优先用 OpenCLI 或 Socai 免费发现候选，TikHub 用于补足未覆盖的质量或字段。OpenCLI 的 `note` 读取正文和互动，`comments --with-replies` 读取评论及楼中楼，`download` 读取图片；Socai 用 `search` 发现候选，以带签名的 `get-notes` 批量读取正文、图片 OCR、评论和回复。Computer Use 用于补充页面核验；详情已有图片 URL 时优先直接核验原图。保留 note_id、xsec_token 和完整签名链接；搜索卡片遇到导航拒绝时，使用同一 ID 与原 token 打开规范的 `/explore/<note_id>?xsec_token=<token>&xsec_source=pc_search`。
+   - **知乎：**TikHub 可发现问题、回答和文章，并通过 ID 结构化接口读取正文和评论；OpenCLI/smart-search 用于免费发现或补充读取，Computer Use 用于页面补充。OpenCLI 可用 `answer-detail`、`answer-comments` 读取；专栏读取原文全文及图片引用，页面导航失败时改走 ID/API。详情评论数为 0 且评论接口返回 `EMPTY_RESULT` 时，记为已核实零评论。
+   - **微信公众号：**TikHub 可搜索和读取原文；smart-search/OpenCLI（含搜狗发现）用于免费发现或补充候选，Computer Use 用于页面补充核验。候选筛选为 `mp.weixin.qq.com/s/...` 原文，并核对账号、标题和发布时间。TikHub 搜索使用 POST `/api/v1/wechat_search/v2/fetch_search`，设置 `business_type=article`、`raw=false` 并保存游标；对入选文章优先 POST `/api/v1/wechat_mp/v2/fetch_article_detail_h5`（`raw=false`）读取正文和图片。`fetch_article_detail` 与 H5 是独立端点，每篇按文档推荐选择详情路径；互动统计、评论和回复另行计费，按需读取并计入预算。按端点文档设置超时；搜索返回 `no_more` 且无结果时记为空。传给 OpenCLI 前删除 `#rd` 等片段并保留有效参数。
+   - **Bilibili、YouTube：**TikHub 可限定视频搜索，并按 BV 号或视频 ID 读取标题、频道/作者、时间、简介、互动、缩略图、平台字幕和评论；OpenCLI/smart-search 用于免费发现或补充读取，Computer Use 用于前两者无法满足的页面核验。字幕为空时先用已知有字幕的视频核对工具链，再视需要转写并标明来源。Bilibili 主评论入口上限为 50，按 rpid 读取楼中楼；YouTube 评论请求上限为 100。报告实际返回及读取数量。
    - Windows 命令行传递含 `&` 的链接时，将完整 URL 作为单个参数；续页使用原始链接、ID 和返回游标。
 
 5. **图片、评论与互动**
