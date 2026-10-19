@@ -30,11 +30,12 @@
    - 多平台任务维护简要台账，记录目标字段、尝试路径、候选总数、实际返回数、已详细读取数、分页/游标、状态和缺口。
 
 4. **平台读取路径**
-   - **小红书：**TikHub 可检索并读取去重后的入选笔记；大批量时优先用 OpenCLI 或 Socai 免费发现候选，Socai 略优先；TikHub 用于补足未覆盖的质量或字段。OpenCLI 的 `note` 读取正文和互动，`comments --with-replies` 读取评论及楼中楼，`download` 读取图片；Socai 用 `search` 发现候选，以带签名的 `get-notes` 批量读取正文、图片 OCR、评论和回复。Computer Use 用于补充页面核验；详情已有图片 URL 时优先直接核验原图。保留 note_id、xsec_token 和完整签名链接；搜索卡片遇到导航拒绝时，使用同一 ID 与原 token 打开规范的 `/explore/<note_id>?xsec_token=<token>&xsec_source=pc_search`。
+   - **小红书：**TikHub 可检索并读取去重后的入选笔记；大批量时优先用 OpenCLI 或 Socai 免费发现候选，OpenCLI 优先于 Socai；TikHub 用于补足未覆盖的质量或字段。OpenCLI 的 `note` 读取正文和互动，`comments --with-replies` 读取评论及楼中楼，`download` 读取图片；Socai 用 `search` 发现候选，以带签名的 `get-notes` 批量读取正文、图片 OCR、评论和回复。Computer Use 用于补充页面核验；详情已有图片 URL 时优先直接核验原图。保留 note_id、xsec_token 和完整签名链接；搜索卡片遇到导航拒绝时，使用同一 ID 与原 token 打开规范的 `/explore/<note_id>?xsec_token=<token>&xsec_source=pc_search`。
    - **知乎：**TikHub 可发现问题、回答和文章，并通过 ID 结构化接口读取正文和评论；OpenCLI/smart-search 用于免费发现或补充读取，Computer Use 用于页面补充。OpenCLI 可用 `answer-detail`、`answer-comments` 读取；专栏读取原文全文及图片引用，页面导航失败时改走 ID/API。详情评论数为 0 且评论接口返回 `EMPTY_RESULT` 时，记为已核实零评论。
    - **微信公众号：**TikHub 可搜索和读取原文；smart-search/OpenCLI（含搜狗发现）用于免费发现或补充候选，Computer Use 用于页面补充核验。候选筛选为 `mp.weixin.qq.com/s/...` 原文，并核对账号、标题和发布时间。TikHub 搜索使用 POST `/api/v1/wechat_search/v2/fetch_search`，设置 `business_type=article`、`raw=false` 并保存游标；对入选文章优先 POST `/api/v1/wechat_mp/v2/fetch_article_detail_h5`（`raw=false`）读取正文和图片。`fetch_article_detail` 与 H5 是独立端点，每篇按文档推荐选择详情路径；互动统计、评论和回复另行计费，按需读取并计入预算。按端点文档设置超时；搜索返回 `no_more` 且无结果时记为空。传给 OpenCLI 前删除 `#rd` 等片段并保留有效参数。
    - **Bilibili、YouTube：**TikHub 可限定视频搜索，并按 BV 号或视频 ID 读取标题、频道/作者、时间、简介、互动、缩略图、平台字幕和评论；OpenCLI/smart-search 用于免费发现或补充读取，Computer Use 用于前两者无法满足的页面核验。字幕为空时先用已知有字幕的视频核对工具链，再视需要转写并标明来源。Bilibili 主评论入口上限为 50，按 rpid 读取楼中楼；YouTube 评论请求上限为 100。报告实际返回及读取数量。
    - Windows 命令行传递含 `&` 的链接时，将完整 URL 作为单个参数；续页使用原始链接、ID 和返回游标。
+   - 如使用浏览器，优先使用 opencli daemon连好的Chrome浏览器，因为该浏览器已经登录各平台的账号。
 
 5. **图片、评论与互动**
    - 对纳入范围的对象按展示顺序读取全部可见图片，记录总数、已读数、OCR 数及失败数。分别标注正文文字、图片可见文字、OCR、视觉判断和无法辨认处；关键数字或单位不清时保留不确定性并复核。
