@@ -45,7 +45,7 @@
 6. **失败处理与用户接管**
    - 保存查询、ID、页码/游标、错误和会话状态；查实时文档、参数、端点与区域设置后，对已明确修正的问题复测一次，再切换独立只读路径。TikHub 超时或连接中断时先查 request_id、响应缓存和账户用量，再判断是否重试。
    - 将 TikHub HTTP 400/404 作为端点或请求路径问题核查；`No valid session ID provided` 先检查 MCP 会话。OpenCLI 的 `Navigation rejected` 记录为浏览器路径问题；`fetch failed` 区分 URL、CDN、网络环境和登录状态。
-   - 执行 OpenCLI 浏览器适配器前，先检查 daemon 与 Chrome 扩展连接状态；若诊断显示 daemon 未运行或 Chrome 扩展未连接，agent 自行执行一次 `opencli daemon restart`，随后重新运行诊断确认连接。若尝试若干次重启后仍未连接，说明当前状态并请用户处理 OpenCLIApp/Chrome 扩展连接。
+   - 执行 OpenCLI 浏览器适配器前，先检查 daemon 与 Chrome 扩展连接状态；若诊断显示 daemon 未运行或 Chrome 扩展未连接，agent 自行执行 `opencli daemon restart`，随后重新运行诊断确认连接。若尝试若干次重启后仍未连接，说明当前状态并请用户处理 OpenCLIApp/Chrome 扩展连接。
    - 出现平台频率告警、账号异常、IP 限制或安全提示时立即停止该路径并记录。验证码、登录或浏览器接管需要用户操作时，说明具体应用、窗口和步骤后暂停；用户在平台页面完成登录或验证，凭据仅由用户在平台输入。OpenCLI 桥接默认复用已登录 Chrome；Socai 登录在其 managed Chrome 完成；Computer Use 仅在用户明确授权后操作当前浏览器。随后从已保存游标继续。
 
 7. **完成判定与结果披露**
