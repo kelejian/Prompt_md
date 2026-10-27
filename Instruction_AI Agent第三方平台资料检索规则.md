@@ -4,8 +4,8 @@
 
 以下名称表示可移植的能力类别，不代表每台设备均已安装。使用前从当前 Agent 的技能清单、MCP/工具目录和命令行帮助中确认可用能力，并读取对应技能的 SKILL.md 及其引用的说明文件；安装状态、集成配置、命令行程序和登录会话均按当前环境判断。
 
-- **TikHub：**以 tikhub-onboarding 为入口，按需配合 tikhub-endpoint-discovery 及其 tikhub-find-endpoint、references/openapi-index.json；端点以官方实时 OpenAPI 为准。已接入 TikHub MCP 时参照 tikhub-mcp 及当前 MCP 配置，否则按官方 API 文档调用 REST；API Key 通过当前环境的密钥配置使用。端点价格以 Marketplace 为准，所有调用均按付费服务计。
-- **OpenCLI / smart-search：**smart-search 是基于 OpenCLI 命令行的检索路由技能，应与 opencli-usage 配套，并按任务读取 smart-search 的相关 references/sources-*.md。通过 opencli list 和所选站点、命令的实时帮助发现适配器及参数；实际执行方式和浏览器/Bridge 要求以适配器当前策略为准。
+- **TikHub：**以 tikhub-onboarding 为入口，按需配合 tikhub-endpoint-discovery 及其 tikhub-find-endpoint、references/openapi-index.json；端点以官方实时 OpenAPI 为准。已接入 TikHub MCP 时参照 tikhub-mcp 及当前 MCP 配置，否则按官方 API 文档调用 REST；Tikhub API Key 见环境变量中用户变量。端点价格以 Marketplace 为准，所有调用均按付费服务计。
+- **OpenCLI / smart-search：**smart-search 是基于 OpenCLI 命令行的检索路由技能，应与 opencli-usage 配套，并按任务读取 smart-search 的相关 references/sources-*.md。通过 opencli list 和所选站点、命令的实时帮助发现适配器及参数；实际执行方式和浏览器/Bridge 要求以适配器当前策略为准。若 daemon 与 Chrome 扩展未连接，可运行 `opencli daemon restart` 等命令尝试重连。
 - **Socai：**通过 socai-social-research 技能使用当前环境的 socai 命令行工具；命令说明见其 references/commands.md，状态和参数以 socai status --json、socai <site> --help 及当前版本支持的平台为准。Socai 使用其管理的 Chrome 会话。
 - **Computer Use：**指当前运行环境提供的图形界面交互能力及其 computer-use 技能说明，适用于需要页面操作或视觉核验的只读场景；是否可用以当前 Agent 的能力清单为准。
 
